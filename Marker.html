@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MCQ Checker</title>
+    <style>
+      /* Color Palette */
+      :root {
+        --bg-light: #F7F7F7;
+        --primary-accent: #4DA1FF;
+        --secondary-accent: #A18AFF;
+        --correct-green: #5AC18E;
+        --wrong-red: #FF6B6B;
+        --text-main: #2E2E2E;
+        --text-muted: #C5C5C5;
+        --hover-bg: #EAF4FF;
+      }
+      .dark {
+        --bg-dark: #1E1E2F;
+        --text-main-dark: #F0F0F0;
+        --text-muted-dark: #8A8A8A;
+      }
+
+      /* Reset & base */
+      body {
+        margin: 0;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        background-color: var(--bg-light);
+        color: var(--text-main);
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+      body.dark {
+        background-color: var(--bg-dark);
+        color: var(--text-main-dark);
+      }
+      .container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1.5rem;
+        display: flex;
+        gap: 2rem;
+      }
+
+      /* Left panel for inputs */
+      .input-panel {
+        flex: 1 1 600px;
+        background-color: var(--bg-light);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.07);
+        transition: background-color 0.3s ease;
+      }
+      body.dark .input-panel {
+        background-color: #2a2a40;
+      }
+
+      label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+
+      textarea {
+        width: 100%;
+        padding: 1rem;
+        border-radius: 12px;
+        border: 1.5px solid var(--text-muted);
+        font-size: 1rem;
+        resize: vertical;
+        background-color: white;
+        color: var(--text-main);
+        box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.07);
+        transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+      }
+      body.dark textarea {
+        background-color: #1e1e2f;
+        color: var(--text-main-dark);
+        border-color: var(--text-muted-dark);
+      }
+      textarea:focus {
+        outline: none;
+        border-color: var(--primary-accent);
+        background-color: var(--hover-bg);
+      }
+      body.dark textarea:focus {
+        background-color: #3a3a6e;
+      }
+
+      button {
+        margin-top: 1rem;
+        width: 100%;
+        background-color: var(--primary-accent);
+        border: none;
+        padding: 1rem 0;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: white;
+        border-radius: 12px;
+        cursor: pointer;
+        box-shadow: 0 6px 12px rgba(77, 161, 255, 0.5);
+        transition: transform 0.2s ease, background-color 0.3s ease;
+      }
+      button:hover,
+      button:focus {
+        background-color: #3a8de8;
+        transform: scale(1.05);
+      }
+
+      /* Right panel for results */
+      .result-panel {
+        width: 380px;
+        background-color: var(--bg-light);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.07);
+        color: var(--text-main);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+      body.dark .result-panel {
+        background-color: #2a2a40;
+        color: var(--text-main-dark);
+      }
+
+      .score-circle {
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        background-color: var(--primary-accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 2.5rem; /* smaller percentage font */
+        color: white;
+        user-select: none;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+        margin-bottom: 1.5rem;
+        transition: background-color 0.3s ease;
+      }
+
+      /* Color circle bg based on score */
+      .score-circle.good {
+        background-color: var(--correct-green);
+      }
+      .score-circle.bad {
+        background-color: var(--wrong-red);
+      }
+
+      .answers-list {
+        width: 100%;
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 0.5rem;
+      }
+      .answer-item {
+        border-radius: 12px;
+        padding: 0.8rem 1rem;
+        margin-bottom: 0.7rem;
+        font-weight: 600;
+        user-select: none;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+      .answer-item.correct {
+        background-color: #D8F0E6; /* lighter green */
+        color: var(--correct-green);
+      }
+      body.dark .answer-item.correct {
+        background-color: #3B5E52;
+        color: var(--correct-green);
+      }
+      .answer-item.wrong {
+        background-color: #FDE4E4; /* lighter red */
+        color: var(--wrong-red);
+      }
+      body.dark .answer-item.wrong {
+        background-color: #603737;
+        color: var(--wrong-red);
+      }
+
+      /* Toggle theme button */
+      #toggleTheme {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        background-color: var(--secondary-accent);
+        border: none;
+        padding: 0.5rem 1rem;
+        color: white;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(161, 138, 255, 0.6);
+        transition: transform 0.2s ease, background-color 0.3s ease;
+        z-index: 100;
+      }
+      #toggleTheme:hover {
+        transform: scale(1.1);
+        background-color: #8a75ff;
+      }
+
+      /* Scrollbar for answers list */
+      .answers-list::-webkit-scrollbar {
+        width: 8px;
+      }
+      .answers-list::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .answers-list::-webkit-scrollbar-thumb {
+        background-color: var(--secondary-accent);
+        border-radius: 12px;
+      }
+
+      @media (max-width: 900px) {
+        .container {
+          flex-direction: column;
+          align-items: center;
+        }
+        .result-panel {
+          width: 100%;
+          margin-top: 2rem;
+        }
+      }
+    </style>
+  </head>
+  <body class="light">
+    <button id="toggleTheme" aria-label="Toggle dark/light mode" title="Toggle Theme" style="
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--secondary-accent);
+  box-shadow: 0 4px 12px rgba(161, 138, 255, 0.6);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  padding: 0;
+  ">
+  <svg
+    id="moonIcon"
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="white"
+    stroke-width="2"
+    width="20"
+    height="20"
+    >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"
+    />
+  </svg>
+</button>
+
+    <div class="container">
+      <section class="input-panel" aria-label="Answer input area">
+        <h1
+          style="
+            font-weight: 900;
+            font-size: 2.4rem;
+            margin-bottom: 1.2rem;
+            color: var(--primary-accent);
+          "
+        >
+          MCQ Answer Checker
+        </h1>
+
+        <label for="userAnswers">Your Answers (e.g. A B C D A):</label>
+        <textarea
+          id="userAnswers"
+          rows="10"
+          placeholder="Paste your answers here..."
+          spellcheck="false"
+          autocomplete="off"
+        ></textarea>
+
+        <label for="correctAnswers" style="margin-top: 1rem;"
+          >Correct Answers (e.g. A B C D B):</label
+        >
+        <textarea
+          id="correctAnswers"
+          rows="10"
+          placeholder="Paste correct answers here..."
+          spellcheck="false"
+          autocomplete="off"
+        ></textarea>
+
+        <button id="checkBtn" aria-label="Check answers button">Check Answers</button>
+      </section>
+
+      <section class="result-panel" aria-label="Results display area">
+        <div id="scoreCircle" class="score-circle" style="visibility: hidden;">
+          0%
+        </div>
+        <div id="result" class="answers-list"></div>
+      </section>
+    </div>
+
+    <script>
+      const body = document.body;
+      const toggleBtn = document.getElementById('toggleTheme');
+      const checkBtn = document.getElementById('checkBtn');
+      const scoreCircle = document.getElementById('scoreCircle');
+      const resultDiv = document.getElementById('result');
+
+      // Toggle dark/light mode
+      toggleBtn.addEventListener('click', () => {
+        if (body.classList.contains('dark')) {
+          body.classList.remove('dark');
+          body.classList.add('light');
+          document.documentElement.classList.remove('dark');
+        } else {
+          body.classList.add('dark');
+          body.classList.remove('light');
+          document.documentElement.classList.add('dark');
+        }
+      });
+
+      // Extract only letters A-D uppercase
+      function extractOnlyABCD(input) {
+        return (input.toUpperCase().match(/\b[ABCD]\b/g) || []);
+      }
+
+      checkBtn.addEventListener('click', () => {
+        const user = extractOnlyABCD(
+          document.getElementById('userAnswers').value
+        );
+        const correct = extractOnlyABCD(
+          document.getElementById('correctAnswers').value
+        );
+
+        if (user.length === 0 || correct.length === 0) {
+          scoreCircle.style.visibility = 'hidden';
+          resultDiv.innerHTML =
+            '<p style="color:#FF6B6B; font-weight: 700;">Please enter valid answers in both fields.</p>';
+          return;
+        }
+
+        if (user.length !== correct.length) {
+          scoreCircle.style.visibility = 'hidden';
+          resultDiv.innerHTML =
+            '<p style="color:#FF6B6B; font-weight: 700;">Error: Answer lengths do not match.</p>';
+          return;
+        }
+
+        let correctCount = 0;
+        let answersHTML = '';
+
+        user.forEach((ans, i) => {
+          const isCorrect = ans === correct[i];
+          if (isCorrect) correctCount++;
+
+          answersHTML += `<div class="answer-item ${
+            isCorrect ? 'correct' : 'wrong'
+          }">
+            Question ${i + 1}: You answered <strong>${ans}</strong>, correct answer is <strong>${correct[i]}</strong>
+          </div>`;
+        });
+
+        const percentage = ((correctCount / correct.length) * 100).toFixed(2);
+
+        // Color circle green if score >= 70%, else red
+        if (percentage >= 70) {
+          scoreCircle.classList.add('good');
+          scoreCircle.classList.remove('bad');
+        } else {
+          scoreCircle.classList.add('bad');
+          scoreCircle.classList.remove('good');
+        }
+
+        scoreCircle.textContent = percentage + '%';
+        scoreCircle.style.visibility = 'visible';
+        resultDiv.innerHTML = answersHTML;
+      });
+    </script>
+  </body>
+</html>
